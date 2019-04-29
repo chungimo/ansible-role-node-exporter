@@ -1,0 +1,44 @@
+---
+
+#Prom NODE exporter
+- name: "Add service user"
+  user:
+    name: "node_exporter"
+    system: yes
+    shell: /bin/false
+
+- name: "Setup Repos"
+  get_url:
+    url: "https://copr.fedorainfracloud.org/coprs/ibotty/prometheus-exporters/repo/epel-7/ibotty-prometheus-exporters-epel-7.repo"
+    dest: "/etc/yum.repos.d/_copr_ibotty-prometheus-exporters.repo"
+
+- name: "Install node_exporter"
+  yum:
+    name: node_exporter
+    state: latest
+
+#- name: "Create service for Node Exporter"
+#  template:
+#    src: "templates/systemd_exporter_service.j2"
+#    dest: "/etc/systemd/system/node_exporter.service"
+#    mode: 0644
+
+- name: "Firewall Public"
+  firewalld:
+    zone: "{{ node_exporter_fw_zone }}"
+    port: "{{ node_exporter_port }}/tcp"
+    permanent: true
+    state: enabled
+  become: yes
+  ignore_errors: yes
+
+- name: "Reload firewall"
+  shell: firewall-cmd --reload
+  register: out
+  ignore_errors: yes
+
+- name: Make sure node_exporter ran at astartup
+  systemd:
+    name: "node_exporter.service"
+    enabled: yes
+    state: started

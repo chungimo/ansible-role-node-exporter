@@ -1,0 +1,12 @@
+---
+
+- name: "Reload Systemd for node_exporter"
+  become: true
+  systemd:
+    daemon_reload: true
+
+- name: "Start Node Exporter"
+  service:
+    name: node_exporter
+    state: started
+    enabled: yes
